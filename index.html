@@ -1,9 +1,24 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#171714"><meta name="description" content="A company, topic and problem-wise LeetCode practice atlas.">
-<title>CodeAtlas — Find your next problem</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#171714">
+<meta name="description" content="Explore coding interview problems by company, topic, and pattern. Build a focused practice list and track your progress locally with CodeAtlas.">
+<meta name="robots" content="index,follow">
+<meta name="color-scheme" content="dark light">
+<title>CodeAtlas — Coding Interview Practice by Company &amp; Topic</title>
+<meta property="og:type" content="website">
+<meta property="og:title" content="CodeAtlas — Coding Interview Practice by Company &amp; Topic">
+<meta property="og:description" content="Explore coding interview problems by company, topic, and pattern. Build a focused practice list and track your progress locally.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="CodeAtlas — Coding Interview Practice by Company &amp; Topic">
+<meta name="twitter:description" content="Explore coding interview problems by company, topic, and pattern. Build a focused practice list and track your progress locally.">
+<!-- Replace these examples only after confirming the production domain and publishing an actual preview image.
+<link rel="canonical" href="https://YOUR-PRODUCTION-DOMAIN.example/">
+<meta property="og:url" content="https://YOUR-PRODUCTION-DOMAIN.example/">
+<meta property="og:image" content="https://YOUR-PRODUCTION-DOMAIN.example/og-image.png">
+-->
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
@@ -13,12 +28,12 @@
   <header class="topbar">
     <a class="brand" href="#" id="brandHome"><span class="brand-mark">C</span><span>codeatlas</span><small>THE INTERVIEW MAP</small></a>
     <nav class="main-nav" aria-label="Main navigation">
-      <button class="nav-link active" data-view="companies">Companies</button>
+      <button class="nav-link active" aria-current="page" data-view="companies">Companies</button>
       <button class="nav-link" data-view="topics">Topics</button>
       <button class="nav-link" data-view="problems">Problems</button>
     </nav>
     <div class="top-actions">
-      <button class="icon-btn" id="themeToggle" title="Toggle theme" aria-label="Toggle theme">◐</button>
+      <button class="icon-btn" id="themeToggle" title="Toggle theme" aria-label="Toggle theme" aria-pressed="false">◐</button>
       <button class="text-btn" id="aboutBtn">About</button>
     </div>
   </header>
@@ -35,7 +50,7 @@
       <div class="section-heading">
         <div><div class="eyebrow" id="sectionKicker">THE COMPANY INDEX</div><h2 id="sectionTitle">Companies</h2></div>
         <div class="view-tools">
-          <label class="searchbox"><span>⌕</span><input id="searchInput" type="search" placeholder="Search companies, topics or problems…" autocomplete="off"><kbd>/</kbd></label>
+          <label class="searchbox"><span aria-hidden="true">⌕</span><input id="searchInput" type="search" aria-label="Search companies, topics, patterns, or problems" placeholder="Search companies, topics or problems…" autocomplete="off"><kbd aria-hidden="true">/</kbd></label>
           <select id="sortSelect" aria-label="Sort results">
             <option value="count">Most problems</option><option value="az">A–Z</option><option value="hard">Most Hard</option><option value="easy">Easiest first</option>
           </select>
@@ -57,7 +72,7 @@
 
       <div class="progress-strip" id="progressStrip"></div>
       <div id="content" class="content-area"><div class="loading">Preparing your practice map…</div></div>
-      <div class="footer-note"><span>CODEATLAS · PERSONAL PRACTICE EDITION</span><span>Progress is saved only in this browser</span></div>
+      <footer class="footer-note"><span>CODEATLAS · PERSONAL PRACTICE EDITION</span><span>Progress is saved only in this browser</span></footer>
     </section>
   </main>
 </div>
@@ -68,6 +83,14 @@
     <div id="modalBody"></div>
   </section>
 </div>
-<div class="toast" id="toast" role="status"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "CodeAtlas",
+  "description": "Explore coding interview problems by company, topic, and pattern. Build a focused practice list and track your progress locally."
+}
+</script>
 <script src="app.js"></script>
 </body></html>
