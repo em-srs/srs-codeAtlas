@@ -1,0 +1,6 @@
+Problems: 3691
+Companies: 684
+Company-problem pairs: 17994
+Topics: 72
+Patterns: 26
+Source: LEETCODE SHEET.xlsx / All Problems
