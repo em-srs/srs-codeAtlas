@@ -23,13 +23,24 @@ Deploy, then open the deployment URL. Verify the app loads its data, browse/sear
 
 Check response headers on `/`, `/app.js`, `/styles.css`, `/data/problems.json`, and `/data/meta.json`. In particular verify that the Content Security Policy is present and does not block the app or Google Fonts. The static server used locally does not apply Vercel headers; verify them on a Vercel deployment.
 
-## 4. Connect a custom domain and HTTPS
+## 4. Configure edge protections in Vercel
+
+These settings are separate from `vercel.json`; this repository cannot enable or verify account-level firewall rules.
+
+1. In the project dashboard, open **Firewall** and review Bot Protection and request traffic. Start in monitoring/log mode where available; verify ordinary users and legitimate search crawlers before enabling challenges or blocks.
+2. Consider a rate-limit rule matching only `/data/problems.json`. Use a conservative threshold and a suitable IP/JA4 key where available. Observe actual traffic first, account for shared IPs and regional counting, then choose an enforcement action and verify legitimate app loads.
+3. Configure Standard Deployment Protection for preview/deployment URLs so non-production builds are not unintentionally public. Keep the production domain public when public access and indexing are intended.
+4. Review Firewall alerts and events after release, and retain a tested rollback path for rules.
+
+These controls can slow repeated requests and block some abusive traffic, but cannot stop one permitted download of the public JSON file. See [ANTI_SCRAPING.md](ANTI_SCRAPING.md) for limits and Vercel documentation links. Dashboard options, usage limits, and costs depend on current Vercel settings and plan.
+
+## 5. Connect a custom domain and HTTPS
 
 In the Vercel project settings, add the domain and follow the DNS instructions Vercel displays. Wait for verification and HTTPS certificate provisioning. Confirm the HTTPS site works before relying on HSTS. Do not publish a made-up canonical domain.
 
 After confirming the actual domain, update the canonical/`og:url` metadata plan in `index.html`, create and configure a real `sitemap.xml` from `sitemap.xml.example`, add its absolute URL to `robots.txt`, and prepare a real social preview image. Remove placeholder domains before submitting the sitemap or requesting indexing.
 
-## 5. Future deploys and rollback
+## 6. Future deploys and rollback
 
 With Git integration enabled, pushing a commit to the production branch triggers a deployment; other branches and pull requests can receive preview deployments. Review each deployment before promoting changes.
 

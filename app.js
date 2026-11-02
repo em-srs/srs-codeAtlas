@@ -1,6 +1,7 @@
 const $ = s => document.querySelector(s);
 const state = {view:"companies", search:"", company:"", topic:"", pattern:"", difficulty:"", status:"", sort:"count", showAll:false, page:1, pageSize:30};
 let problems=[], meta={}, solved=new Set(), bookmarked=new Set(), toastTimer, modalReturnFocus=null;
+const MAX_SEARCH_LENGTH=200;
 const fmt = n => Number(n||0).toLocaleString("en-IN");
 const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const leetcodeUrl = p => {
@@ -107,7 +108,7 @@ function syncControls(){
 function syncURL(){
  const u=new URL(location.href);["company","topic","pattern","difficulty","status","search"].forEach(k=>state[k]?u.searchParams.set(k,state[k]):u.searchParams.delete(k));u.searchParams.set("view",state.view);u.searchParams.set("page",state.page);history.replaceState({}, "",u);
 }
-function loadURL(){const u=new URL(location.href);["company","topic","pattern","difficulty","status"].forEach(k=>state[k]=u.searchParams.get(k)||"");state.search=u.searchParams.get("search")||"";const page=Number(u.searchParams.get("page")||1);state.page=Number.isSafeInteger(page)&&page>0?page:1;state.view=["companies","topics","problems"].includes(u.searchParams.get("view"))?u.searchParams.get("view"):"companies"}
+function loadURL(){const u=new URL(location.href);["company","topic","pattern","difficulty","status"].forEach(k=>state[k]=u.searchParams.get(k)||"");state.search=(u.searchParams.get("search")||"").slice(0,MAX_SEARCH_LENGTH);const page=Number(u.searchParams.get("page")||1);state.page=Number.isSafeInteger(page)&&page>0?page:1;state.view=["companies","topics","problems"].includes(u.searchParams.get("view"))?u.searchParams.get("view"):"companies"}
 function renderStats(){
  $("#stats").innerHTML=[[fmt(meta.companies.length),"COMPANIES"],[fmt(problems.length),"PROBLEMS"],[fmt(meta.companyProblemPairs),"COMPANY · PROBLEM PAIRS"]].map(([n,l])=>`<div class="stat"><strong>${n}</strong><span>${l}</span></div>`).join("");
 }
@@ -233,7 +234,7 @@ function wire(){
  $("#aboutBtn").onclick=showAbout;
  $("#modalClose").onclick=closeModal;$("#modalBackdrop").onclick=e=>{if(e.target===$("#modalBackdrop"))closeModal()};
  ["company","topic","pattern","difficulty","status"].forEach(k=>$("#"+k+"Filter").addEventListener("change",e=>{state[k]=e.target.value;state.page=1;render()}));
- $("#searchInput").addEventListener("input",e=>{state.search=e.target.value;state.page=1;render()});
+ $("#searchInput").addEventListener("input",e=>{state.search=e.target.value.slice(0,MAX_SEARCH_LENGTH);e.target.value=state.search;state.page=1;render()});
  $("#sortSelect").addEventListener("change",e=>{state.sort=e.target.value;state.page=1;render()});
  $("#clearFilters").onclick=()=>{["company","topic","pattern","difficulty","status","search"].forEach(k=>state[k]="");state.showAll=false;state.page=1;render()};
  document.addEventListener("keydown",e=>{

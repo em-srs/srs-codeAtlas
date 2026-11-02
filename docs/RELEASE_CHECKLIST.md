@@ -14,6 +14,9 @@
 ## Security and privacy
 
 - [ ] Check security headers and CSP on the deployed site; confirm required resources load.
+- [ ] Confirm intended preview protection and production Firewall/Bot Protection/rate-limit rules in the Vercel dashboard; repository configuration alone does not enable them.
+- [ ] Verify ordinary users and legitimate search crawlers still work after any edge challenge/rate-limit rule is enforced.
+- [ ] Confirm the public JSON dataset is directly downloadable and that this is permitted by its rights holder.
 - [ ] Check that no secrets, unnecessary scripts, or unreviewed external services were added.
 - [ ] Confirm local-storage behavior and privacy documentation match the release.
 - [ ] Confirm no placeholder contact or domain is presented as real information.

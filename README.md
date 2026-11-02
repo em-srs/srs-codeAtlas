@@ -35,6 +35,7 @@ Screenshots are not included yet. Add genuine captures of the current applicatio
 ├── docs/
 │   ├── DATA_PROVENANCE.md
 │   ├── DEPLOYMENT.md
+│   ├── ANTI_SCRAPING.md
 │   ├── RELEASE_CHECKLIST.md
 │   └── SEO_CHECKLIST.md
 ├── index.html
@@ -81,9 +82,11 @@ Company/topic normalization notes: TCS, D. E. Shaw, Booking.com, Meta (Facebook 
 
 ## Security and privacy
 
-Text rendered from the dataset is escaped, links are restricted to HTTPS LeetCode search URLs, local storage is treated as untrusted, and Vercel security headers are configured. These measures reduce risk but do not make a public static site completely secure. Review [SECURITY.md](SECURITY.md) and [PRIVACY.md](PRIVACY.md) before launch.
+Text rendered from the dataset is escaped, links are restricted to HTTPS LeetCode search URLs, local storage is treated as untrusted, and Vercel security headers are configured. Search text is limited to 200 characters. These measures reduce risk but do not make a public static site completely secure. Review [SECURITY.md](SECURITY.md) and [PRIVACY.md](PRIVACY.md) before launch.
 
 The app stores solved IDs, bookmark IDs, and theme preference in the visitor's browser. Search and filter values are reflected in the page URL. Google Fonts requests go to Google; Vercel may process request logs; opening a problem link sends the visitor to LeetCode. There is no analytics or third-party JavaScript in the current project. Verify applicable provider settings and privacy details before publication.
+
+The complete JSON dataset is public and directly downloadable. There is no server-side rate limiter, bot detector, or authentication. Vercel firewall and bot protections must be separately configured in the project dashboard; even those controls cannot prevent a first allowed download of public data. See [docs/ANTI_SCRAPING.md](docs/ANTI_SCRAPING.md) for the threat boundary and owner setup steps.
 
 ## SEO and known limitations
 
