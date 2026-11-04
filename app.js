@@ -4,10 +4,20 @@ let problems=[], meta={}, solved=new Set(), bookmarked=new Set(), toastTimer, mo
 const MAX_SEARCH_LENGTH=200;
 const fmt = n => Number(n||0).toLocaleString("en-IN");
 const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const leetcodeUrl = p => {
+// LeetCode problem URLs use a slug derived from the title (e.g. "Two Sum" -> two-sum).
+// Add an entry here when a problem's real slug differs from its title.
+const SLUG_OVERRIDES = {
+ "Add and Search Word - Data structure design":"design-add-and-search-words-data-structure"
+};
+const slugify = t => String(t).normalize("NFKD").toLowerCase().replace(/['\u2019`]/g,"").replace(/[()]/g,"").replace(/[^a-z0-9]+/g," ").trim().replace(/ +/g,"-");
+const leetcodeSearchUrl = p => {
  const url = new URL("https://leetcode.com/problemset/");
  url.searchParams.set("search",p.title);
- return url.protocol === "https:" && url.hostname === "leetcode.com" ? url.href : "https://leetcode.com/";
+ return url.href;
+};
+const leetcodeUrl = p => {
+ const slug = SLUG_OVERRIDES[p.title] || slugify(p.title);
+ return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) ? `https://leetcode.com/problems/${slug}/` : leetcodeSearchUrl(p);
 };
 const key = "codeatlas-progress-v1";
 function validIds(values){
