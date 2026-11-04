@@ -212,7 +212,7 @@ function openProblem(id){
  const askedCount=p.companies.length;
  const url=leetcodeUrl(p);
  $("#modalBody").innerHTML=`<div class="modal-kicker">PROBLEM #${p.id}</div><h2 class="modal-title" id="modalTitle">${esc(p.title)}</h2>
- <div class="modal-top-action"><a class="action-btn primary" href="${url}" target="_blank" rel="noopener noreferrer">Open on LeetCode ↗</a></div>
+ <div class="modal-top-action"><a class="action-btn primary" href="${url}" target="_blank" rel="noopener noreferrer">Open on LeetCode ↗</a> <a class="action-btn" href="${leetcodeSearchUrl(p)}" target="_blank" rel="noopener noreferrer">Link not working? Search ↗</a></div>
  <div class="asked-summary"><div class="asked-number">${fmt(askedCount)}</div><div><strong>${askedCount===1?"company has":"companies have"} asked this</strong><span>Based on the company list in your spreadsheet</span></div></div>
  <div class="modal-meta problem-meta"><span class="diff-pill ${esc(p.difficulty)}">${esc(p.difficulty)}</span><span>Suggested: ${esc(p.suggestedDifficulty)}</span><span>Acceptance: ${p.acceptance==null?"—":p.acceptance.toFixed(1)+"%"}</span><span>♥ ${fmt(p.likes)} · ${fmt(p.dislikes)} dislikes</span></div>
  <div class="modal-section"><h3>TOPICS</h3><div class="tag-list">${p.topics.map(t=>`<button class="company-chip" data-topic="${esc(t)}">${esc(t)}</button>`).join("")||"Uncategorized"}</div></div>
