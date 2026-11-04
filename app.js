@@ -182,7 +182,7 @@ function renderEntities(kind){
  let items=[...map.entries()].map(([name,ps])=>({name,ps,c:counts(ps),total:ps.length}));
  if(state.sort==="az")items.sort((a,b)=>a.name.localeCompare(b.name));
  else if(state.sort==="hard")items.sort((a,b)=>b.c.hard-a.c.hard||b.total-a.total);
- else if(state.sort==="easy")items.sort((a,b)=>a.c.easy-b.c.easy||b.total-a.total);
+ else if(state.sort==="easy")items.sort((a,b)=>b.c.easy-a.c.easy||b.total-a.total);
  else items.sort((a,b)=>b.total-a.total||a.name.localeCompare(b.name));
  if(kind==="companies"&&!state.showAll&&!state.search&&!state.company&&!state.topic&&!state.pattern&&!state.difficulty&&!state.status)items=items.filter(x=>x.total>1);
  const title=kind==="companies"?"Companies":"Topics";
