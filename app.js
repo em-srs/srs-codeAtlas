@@ -77,7 +77,7 @@ function normalizeMetadata(data){
 }
 function notify(msg){const t=$("#toast");t.textContent=msg;t.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("show"),1800)}
 function counts(list){return {total:list.length,easy:list.filter(p=>p.difficulty==="Easy").length,medium:list.filter(p=>p.difficulty==="Medium").length,hard:list.filter(p=>p.difficulty==="Hard").length}}
-function filtered(){
+function filtered(opts={}){
  let arr=problems.filter(p=>{
   if(state.company&&!p.companies.includes(state.company))return false;
   if(state.topic&&!p.topics.includes(state.topic))return false;
@@ -86,7 +86,7 @@ function filtered(){
   if(state.status==="solved"&&!solved.has(p.id))return false;
   if(state.status==="unsolved"&&solved.has(p.id))return false;
   if(state.status==="bookmarked"&&!bookmarked.has(p.id))return false;
-  if(state.search){const q=state.search.toLowerCase();if(!String(p.id).includes(q)&&!p.title.toLowerCase().includes(q)&&!p.companies.some(c=>c.toLowerCase().includes(q))&&!p.topics.some(t=>t.toLowerCase().includes(q))&&!p.pattern.toLowerCase().includes(q))return false}
+  if(state.search&&!opts.skipSearch){const q=state.search.toLowerCase();if(!String(p.id).includes(q)&&!p.title.toLowerCase().includes(q)&&!p.companies.some(c=>c.toLowerCase().includes(q))&&!p.topics.some(t=>t.toLowerCase().includes(q))&&!p.pattern.toLowerCase().includes(q))return false}
   return true;
  });
  if(state.sort==="easy")arr.sort((a,b)=>({Easy:0,Medium:1,Hard:2}[a.difficulty]-({Easy:0,Medium:1,Hard:2}[b.difficulty])||b.companyCount-a.companyCount));
@@ -148,19 +148,24 @@ function wirePagination(total,pageSize){
  $("#pageSizeSelect")?.addEventListener("change",e=>{state.pageSize=Number(e.target.value);state.page=1;render()});
 }
 // Groups problems under companies or topics for the card views.
-// When a company/topic filter is set, only that one is returned.
-function groupEntities(kind,problems,selected){
+// Only the selected company/topic is kept when a filter is set, and search matches the card's own
+// name (all of its problems stay listed) or a problem's title/id,
+// so searching "Google" lists Google, not every company that shares a problem with it.
+function groupEntities(kind,base,query,selected){
+ const q=String(query||"").toLowerCase();
  const names=kind==="companies"?(p=>p.companies):(p=>p.topics);
+ const problemHit=p=>String(p.id).includes(q)||p.title.toLowerCase().includes(q);
  const map=new Map();
- problems.forEach(p=>names(p).forEach(name=>{
+ base.forEach(p=>names(p).forEach(name=>{
   if(selected&&name!==selected)return;
+  if(q&&!name.toLowerCase().includes(q)&&!problemHit(p))return;
   if(!map.has(name))map.set(name,[]);
   map.get(name).push(p);
  }));
  return map;
 }
 function renderEntities(kind){
- const map=groupEntities(kind,filtered(),kind==="companies"?state.company:state.topic);
+ const map=groupEntities(kind,filtered({skipSearch:true}),state.search,kind==="companies"?state.company:state.topic);
  let items=[...map.entries()].map(([name,ps])=>({name,ps,c:counts(ps),total:ps.length}));
  if(state.sort==="az")items.sort((a,b)=>a.name.localeCompare(b.name));
  else if(state.sort==="hard")items.sort((a,b)=>b.c.hard-a.c.hard||b.total-a.total);
