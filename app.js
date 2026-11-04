@@ -106,11 +106,17 @@ function syncNav(){
  });
 }
 function setView(v){state.view=v;state.page=1;syncNav();render();syncURL()}
-// Company dropdown: every company A-Z.
+const HOTLIST_SIZE=12;
+// Company dropdown: a "Hotlist" of the most-asked companies first, then every other company A-Z.
 function fillCompanyFilter(){
  const el=$("#companyFilter"),old=el.value;
- const names=meta.companies.map(x=>x[0]).sort((a,b)=>a.localeCompare(b));
- el.innerHTML=`<option value="">All companies</option>`+names.map(name=>`<option value="${esc(name)}">${esc(name)}</option>`).join("");
+ const hot=[...meta.companies].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).slice(0,HOTLIST_SIZE);
+ const hotNames=new Set(hot.map(x=>x[0]));
+ const rest=meta.companies.map(x=>x[0]).filter(name=>!hotNames.has(name)).sort((a,b)=>a.localeCompare(b));
+ const option=(value,label)=>`<option value="${esc(value)}">${esc(label)}</option>`;
+ el.innerHTML=`<option value="">All companies</option>`
+  +`<optgroup label="\u{1F525} Hotlist \u00B7 most asked">${hot.map(([name,count])=>option(name,`${name} (${fmt(count)})`)).join("")}</optgroup>`
+  +`<optgroup label="All other companies (A\u2013Z)">${rest.map(name=>option(name,name)).join("")}</optgroup>`;
  el.value=old;
 }
 function updateSelects(){
