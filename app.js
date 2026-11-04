@@ -148,17 +148,19 @@ function wirePagination(total,pageSize){
  $("#pageSizeSelect")?.addEventListener("change",e=>{state.pageSize=Number(e.target.value);state.page=1;render()});
 }
 // Groups problems under companies or topics for the card views.
-function groupEntities(kind,problems){
+// When a company/topic filter is set, only that one is returned.
+function groupEntities(kind,problems,selected){
  const names=kind==="companies"?(p=>p.companies):(p=>p.topics);
  const map=new Map();
  problems.forEach(p=>names(p).forEach(name=>{
+  if(selected&&name!==selected)return;
   if(!map.has(name))map.set(name,[]);
   map.get(name).push(p);
  }));
  return map;
 }
 function renderEntities(kind){
- const map=groupEntities(kind,filtered());
+ const map=groupEntities(kind,filtered(),kind==="companies"?state.company:state.topic);
  let items=[...map.entries()].map(([name,ps])=>({name,ps,c:counts(ps),total:ps.length}));
  if(state.sort==="az")items.sort((a,b)=>a.name.localeCompare(b.name));
  else if(state.sort==="hard")items.sort((a,b)=>b.c.hard-a.c.hard||b.total-a.total);
