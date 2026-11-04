@@ -4,10 +4,20 @@ let problems=[], meta={}, solved=new Set(), bookmarked=new Set(), toastTimer, mo
 const MAX_SEARCH_LENGTH=200;
 const fmt = n => Number(n||0).toLocaleString("en-IN");
 const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const leetcodeUrl = p => {
+// LeetCode problem URLs use a slug derived from the title (e.g. "Two Sum" -> two-sum).
+// Add an entry here when a problem's real slug differs from its title.
+const SLUG_OVERRIDES = {
+ "Add and Search Word - Data structure design":"design-add-and-search-words-data-structure"
+};
+const slugify = t => String(t).normalize("NFKD").toLowerCase().replace(/['\u2019`]/g,"").replace(/[()]/g,"").replace(/[^a-z0-9]+/g," ").trim().replace(/ +/g,"-");
+const leetcodeSearchUrl = p => {
  const url = new URL("https://leetcode.com/problemset/");
  url.searchParams.set("search",p.title);
- return url.protocol === "https:" && url.hostname === "leetcode.com" ? url.href : "https://leetcode.com/";
+ return url.href;
+};
+const leetcodeUrl = p => {
+ const slug = SLUG_OVERRIDES[p.title] || slugify(p.title);
+ return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) ? `https://leetcode.com/problems/${slug}/` : leetcodeSearchUrl(p);
 };
 const key = "codeatlas-progress-v1";
 function validIds(values){
@@ -67,7 +77,7 @@ function normalizeMetadata(data){
 }
 function notify(msg){const t=$("#toast");t.textContent=msg;t.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("show"),1800)}
 function counts(list){return {total:list.length,easy:list.filter(p=>p.difficulty==="Easy").length,medium:list.filter(p=>p.difficulty==="Medium").length,hard:list.filter(p=>p.difficulty==="Hard").length}}
-function filtered(){
+function filtered(opts={}){
  let arr=problems.filter(p=>{
   if(state.company&&!p.companies.includes(state.company))return false;
   if(state.topic&&!p.topics.includes(state.topic))return false;
@@ -76,7 +86,7 @@ function filtered(){
   if(state.status==="solved"&&!solved.has(p.id))return false;
   if(state.status==="unsolved"&&solved.has(p.id))return false;
   if(state.status==="bookmarked"&&!bookmarked.has(p.id))return false;
-  if(state.search){const q=state.search.toLowerCase();if(!String(p.id).includes(q)&&!p.title.toLowerCase().includes(q)&&!p.companies.some(c=>c.toLowerCase().includes(q))&&!p.topics.some(t=>t.toLowerCase().includes(q))&&!p.pattern.toLowerCase().includes(q))return false}
+  if(state.search&&!opts.skipSearch){const q=state.search.toLowerCase();if(!String(p.id).includes(q)&&!p.title.toLowerCase().includes(q)&&!p.companies.some(c=>c.toLowerCase().includes(q))&&!p.topics.some(t=>t.toLowerCase().includes(q))&&!p.pattern.toLowerCase().includes(q))return false}
   return true;
  });
  if(state.sort==="easy")arr.sort((a,b)=>({Easy:0,Medium:1,Hard:2}[a.difficulty]-({Easy:0,Medium:1,Hard:2}[b.difficulty])||b.companyCount-a.companyCount));
@@ -96,9 +106,22 @@ function syncNav(){
  });
 }
 function setView(v){state.view=v;state.page=1;syncNav();render();syncURL()}
+const HOTLIST_SIZE=12;
+// Company dropdown: a "Hotlist" of the most-asked companies first, then every other company A-Z.
+function fillCompanyFilter(){
+ const el=$("#companyFilter"),old=el.value;
+ const hot=[...meta.companies].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).slice(0,HOTLIST_SIZE);
+ const hotNames=new Set(hot.map(x=>x[0]));
+ const rest=meta.companies.map(x=>x[0]).filter(name=>!hotNames.has(name)).sort((a,b)=>a.localeCompare(b));
+ const option=(value,label)=>`<option value="${esc(value)}">${esc(label)}</option>`;
+ el.innerHTML=`<option value="">All companies</option>`
+  +`<optgroup label="\u{1F525} Hotlist \u00B7 most asked">${hot.map(([name,count])=>option(name,`${name} (${fmt(count)})`)).join("")}</optgroup>`
+  +`<optgroup label="All other companies (A\u2013Z)">${rest.map(name=>option(name,name)).join("")}</optgroup>`;
+ el.value=old;
+}
 function updateSelects(){
  const fill=(id,items,label)=>{const el=$(id),old=el.value;el.innerHTML=`<option value="">${label}</option>`+items.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("");el.value=old};
- fill("#companyFilter",meta.companies.map(x=>x[0]).sort((a,b)=>a.localeCompare(b)),"All companies");
+ fillCompanyFilter();
  fill("#topicFilter",meta.topics.map(x=>x[0]).sort((a,b)=>a.localeCompare(b)),"All topics");
  fill("#patternFilter",meta.patterns.map(x=>x[0]).sort((a,b)=>a.localeCompare(b)),"All patterns");
 }
@@ -137,17 +160,29 @@ function wirePagination(total,pageSize){
  document.querySelectorAll("[data-page]").forEach(b=>b.addEventListener("click",()=>{if(b.disabled)return;state.page=Number(b.dataset.page);render();window.scrollTo({top:document.querySelector(".workspace").offsetTop-70,behavior:"smooth"})}));
  $("#pageSizeSelect")?.addEventListener("change",e=>{state.pageSize=Number(e.target.value);state.page=1;render()});
 }
+// Groups problems under companies or topics for the card views.
+// Only the selected company/topic is kept when a filter is set, and search matches the card's own
+// name (all of its problems stay listed) or a problem's title/id,
+// so searching "Google" lists Google, not every company that shares a problem with it.
+function groupEntities(kind,base,query,selected){
+ const q=String(query||"").toLowerCase();
+ const names=kind==="companies"?(p=>p.companies):(p=>p.topics);
+ const problemHit=p=>String(p.id).includes(q)||p.title.toLowerCase().includes(q);
+ const map=new Map();
+ base.forEach(p=>names(p).forEach(name=>{
+  if(selected&&name!==selected)return;
+  if(q&&!name.toLowerCase().includes(q)&&!problemHit(p))return;
+  if(!map.has(name))map.set(name,[]);
+  map.get(name).push(p);
+ }));
+ return map;
+}
 function renderEntities(kind){
- const all=filtered(), map=new Map();
- if(kind==="companies"){
-  all.forEach(p=>p.companies.forEach(c=>{if(!map.has(c))map.set(c,[]);map.get(c).push(p)}));
- }else{
-  all.forEach(p=>p.topics.forEach(t=>{if(!map.has(t))map.set(t,[]);map.get(t).push(p)}));
- }
+ const map=groupEntities(kind,filtered({skipSearch:true}),state.search,kind==="companies"?state.company:state.topic);
  let items=[...map.entries()].map(([name,ps])=>({name,ps,c:counts(ps),total:ps.length}));
  if(state.sort==="az")items.sort((a,b)=>a.name.localeCompare(b.name));
  else if(state.sort==="hard")items.sort((a,b)=>b.c.hard-a.c.hard||b.total-a.total);
- else if(state.sort==="easy")items.sort((a,b)=>a.c.easy-b.c.easy||b.total-a.total);
+ else if(state.sort==="easy")items.sort((a,b)=>b.c.easy-a.c.easy||b.total-a.total);
  else items.sort((a,b)=>b.total-a.total||a.name.localeCompare(b.name));
  if(kind==="companies"&&!state.showAll&&!state.search&&!state.company&&!state.topic&&!state.pattern&&!state.difficulty&&!state.status)items=items.filter(x=>x.total>1);
  const title=kind==="companies"?"Companies":"Topics";
@@ -202,7 +237,7 @@ function openProblem(id){
  const askedCount=p.companies.length;
  const url=leetcodeUrl(p);
  $("#modalBody").innerHTML=`<div class="modal-kicker">PROBLEM #${p.id}</div><h2 class="modal-title" id="modalTitle">${esc(p.title)}</h2>
- <div class="modal-top-action"><a class="action-btn primary" href="${url}" target="_blank" rel="noopener noreferrer">Open on LeetCode ↗</a></div>
+ <div class="modal-top-action"><a class="action-btn primary" href="${url}" target="_blank" rel="noopener noreferrer">Open on LeetCode ↗</a> <a class="action-btn" href="${leetcodeSearchUrl(p)}" target="_blank" rel="noopener noreferrer">Link not working? Search ↗</a></div>
  <div class="asked-summary"><div class="asked-number">${fmt(askedCount)}</div><div><strong>${askedCount===1?"company has":"companies have"} asked this</strong><span>Based on the company list in your spreadsheet</span></div></div>
  <div class="modal-meta problem-meta"><span class="diff-pill ${esc(p.difficulty)}">${esc(p.difficulty)}</span><span>Suggested: ${esc(p.suggestedDifficulty)}</span><span>Acceptance: ${p.acceptance==null?"—":p.acceptance.toFixed(1)+"%"}</span><span>♥ ${fmt(p.likes)} · ${fmt(p.dislikes)} dislikes</span></div>
  <div class="modal-section"><h3>TOPICS</h3><div class="tag-list">${p.topics.map(t=>`<button class="company-chip" data-topic="${esc(t)}">${esc(t)}</button>`).join("")||"Uncategorized"}</div></div>
