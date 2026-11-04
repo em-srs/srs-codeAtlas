@@ -106,9 +106,16 @@ function syncNav(){
  });
 }
 function setView(v){state.view=v;state.page=1;syncNav();render();syncURL()}
+// Company dropdown: every company A-Z.
+function fillCompanyFilter(){
+ const el=$("#companyFilter"),old=el.value;
+ const names=meta.companies.map(x=>x[0]).sort((a,b)=>a.localeCompare(b));
+ el.innerHTML=`<option value="">All companies</option>`+names.map(name=>`<option value="${esc(name)}">${esc(name)}</option>`).join("");
+ el.value=old;
+}
 function updateSelects(){
  const fill=(id,items,label)=>{const el=$(id),old=el.value;el.innerHTML=`<option value="">${label}</option>`+items.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("");el.value=old};
- fill("#companyFilter",meta.companies.map(x=>x[0]).sort((a,b)=>a.localeCompare(b)),"All companies");
+ fillCompanyFilter();
  fill("#topicFilter",meta.topics.map(x=>x[0]).sort((a,b)=>a.localeCompare(b)),"All topics");
  fill("#patternFilter",meta.patterns.map(x=>x[0]).sort((a,b)=>a.localeCompare(b)),"All patterns");
 }
