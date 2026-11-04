@@ -147,13 +147,18 @@ function wirePagination(total,pageSize){
  document.querySelectorAll("[data-page]").forEach(b=>b.addEventListener("click",()=>{if(b.disabled)return;state.page=Number(b.dataset.page);render();window.scrollTo({top:document.querySelector(".workspace").offsetTop-70,behavior:"smooth"})}));
  $("#pageSizeSelect")?.addEventListener("change",e=>{state.pageSize=Number(e.target.value);state.page=1;render()});
 }
+// Groups problems under companies or topics for the card views.
+function groupEntities(kind,problems){
+ const names=kind==="companies"?(p=>p.companies):(p=>p.topics);
+ const map=new Map();
+ problems.forEach(p=>names(p).forEach(name=>{
+  if(!map.has(name))map.set(name,[]);
+  map.get(name).push(p);
+ }));
+ return map;
+}
 function renderEntities(kind){
- const all=filtered(), map=new Map();
- if(kind==="companies"){
-  all.forEach(p=>p.companies.forEach(c=>{if(!map.has(c))map.set(c,[]);map.get(c).push(p)}));
- }else{
-  all.forEach(p=>p.topics.forEach(t=>{if(!map.has(t))map.set(t,[]);map.get(t).push(p)}));
- }
+ const map=groupEntities(kind,filtered());
  let items=[...map.entries()].map(([name,ps])=>({name,ps,c:counts(ps),total:ps.length}));
  if(state.sort==="az")items.sort((a,b)=>a.name.localeCompare(b.name));
  else if(state.sort==="hard")items.sort((a,b)=>b.c.hard-a.c.hard||b.total-a.total);
